@@ -4,7 +4,7 @@ import cv2 # 이미지 처리 및 cv 작업 위함
 from ultralytics import YOLO # yolo 모델 가져오기
 
 # 훈련된 yolo 모델의 가중치를 로드해서 객체 탐지 모델 인스턴스 생성
-model = YOLO("/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/car_plate_detection_yolov8/runs/detect/multi_car_1/weights/best.pt")
+model = YOLO("/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/car_plate_detection_yolov8/runs/detect/label_class4_multi_car_all/best.pt")
 # 테스트 이미지가 있는 폴더 경로 찾기
 data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/ms_team_cardata/final_data_combination1/multi_car/test/images"
 # 테스트 이미지가 있는 폴더에서 모든 이미지 파일의 경로를 찾아서 리스트에 저장하기
