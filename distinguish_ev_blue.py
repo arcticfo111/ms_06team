@@ -8,6 +8,10 @@ import numpy as np
 model = YOLO("/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/car_plate_detection_yolov8/runs/detect/label_class4_multi_car_all/best.pt")
 # 테스트 이미지가 있는 폴더 경로 찾기
 data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/ms_team_cardata/final_data_combination1/multi_car/test/images"
+# 최종 결과값 저장할 디렉토리
+save_path_result = "./save_path_result"
+if not os.path.exists(save_path_result):
+    os.mkdir(save_path_result)
 # 파랑 번호판이 아닌 이미지를 저장할 디렉토리
 save_path_non_blue = "./non_blue_detected"
 if not os.path.exists(save_path_non_blue):
@@ -60,10 +64,15 @@ for path in data_path_list :
                 non_blue_detected = False
             # 파란색이 아닌 번호판이 탐지되면 이미지 저장
             if non_blue_detected == False:
+                print(non_blue_detected)
                 filename = os.path.basename(path)
                 cv2.imwrite(os.path.join(save_path_non_blue, filename), image)
+                non_blue_detected = False
+                print(non_blue_detected)
     # 바운딩 박스가 그려진 이미지 표시하기, 엔터로 다음 이미지 넘어가기
-    cv2.imshow("test", image)
-    # q 키가 눌러지면 프로그램 종료하기
-    if cv2.waitKey(0) == ord('q') :
-        exit()
+    # cv2.imshow("test", image)
+    # # q 키가 눌러지면 프로그램 종료하기
+    # if cv2.waitKey(0) == ord('q') :
+    #     exit()
+    filename = os.path.basename(path)
+    cv2.imwrite(os.path.join(save_path_result, filename), image)
