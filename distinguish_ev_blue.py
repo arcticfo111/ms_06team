@@ -12,10 +12,23 @@ data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electroni
 save_path_result = "./save_path_result"
 if not os.path.exists(save_path_result):
     os.mkdir(save_path_result)
+
+save_path_cant_detect = "./save_path_cant_detect"
+if not os.path.exists(save_path_cant_detect):
+    os.mkdir(save_path_cant_detect)
+
+save_path_only_detect_car = "./save_path_only_detect_car"
+if not os.path.exists(save_path_only_detect_car):
+    os.mkdir(save_path_only_detect_car)
+
 # 파랑 번호판이 아닌 이미지를 저장할 디렉토리
-save_path_non_blue = "./non_blue_detected"
-if not os.path.exists(save_path_non_blue):
-    os.mkdir(save_path_non_blue)
+save_path_non_color = "./non_blue_detected"
+if not os.path.exists(save_path_non_color):
+    os.mkdir(save_path_non_color)
+# 파랑 번호판이미지를 저장할 디렉토리
+save_path_blue = "./blue_detected"
+if not os.path.exists(save_path_blue):
+    os.mkdir(save_path_blue)
 
 # 테스트 이미지가 있는 폴더에서 모든 이미지 파일의 경로를 찾아서 리스트에 저장하기
 data_path_list = glob.glob(os.path.join(data_path, "*.png"))
@@ -31,7 +44,7 @@ for path in data_path_list :
     boxes = results[0].boxes
     results_info = boxes
     # 파란색이 아닌 번호판 탐지 플래그
-    non_blue_detected = True
+    plate_color = []
     # 각 바운딩 박스의 클래스 번호, 바운딩 박스 신뢰도, 바운딩 박스 좌표 점수 가져오기
     cls_numbers = results_info.cls 
     conf_numbers = results_info.conf 
@@ -48,7 +61,8 @@ for path in data_path_list :
         # print(class_name, class_number, x1,y1,x2,y2)
         # 이미지에 녹색 바운딩 박스 그리기
         rect = cv2.rectangle(image, (x1,y1), (x2,y2), (0,255,0), 2)
-        if class_name == 'one_line_plate' or class_name == 'two_line_plate':
+        print(class_name)
+        if class_name != 'car':
             # 번호판 영역 추출
             plate = image[y1:y2, x1:x2]
             # HSV로 변환
@@ -59,20 +73,31 @@ for path in data_path_list :
             mask = cv2.inRange(hsv, lower_blue, upper_blue)
             # 파란색 비율 계산
             blue_ratio = np.sum(mask) / (mask.shape[0] * mask.shape[1] * 255)
+            print(blue_ratio)
             # 파란색이 아닌 번호판이면
             if blue_ratio < 0.5:  # 파란색이 이미지의 50% 미만일 경우
-                non_blue_detected = False
-            # 파란색이 아닌 번호판이 탐지되면 이미지 저장
-            if non_blue_detected == False:
-                print(non_blue_detected)
-                filename = os.path.basename(path)
-                cv2.imwrite(os.path.join(save_path_non_blue, filename), image)
-                non_blue_detected = False
-                print(non_blue_detected)
-    # 바운딩 박스가 그려진 이미지 표시하기, 엔터로 다음 이미지 넘어가기
-    # cv2.imshow("test", image)
-    # # q 키가 눌러지면 프로그램 종료하기
-    # if cv2.waitKey(0) == ord('q') :
-    #     exit()
+                plate_color.append('white')
+            elif blue_ratio >= 0.5:
+                plate_color.append('blue')
+    # 바운딩 박스 못 그린 이미지 따로 저장하기
+    if len(results_info) == 0:
+        print('save_path_cant_detect')
+        filename = os.path.basename(path)
+        cv2.imwrite(os.path.join(save_path_cant_detect, filename), image)
+    elif len(results_info) != 0:
+        # 파란색이 아닌 번호판이 탐지되면 이미지 저장
+        if 'blue' in plate_color:
+            print('blue')
+            filename = os.path.basename(path)
+            cv2.imwrite(os.path.join(save_path_blue, filename), image)
+        elif 'white' in plate_color:
+            print('white')
+            filename = os.path.basename(path)
+            cv2.imwrite(os.path.join(save_path_non_color, filename), image)
+        else: 
+            filename = os.path.basename(path)
+            cv2.imwrite(os.path.join(save_path_only_detect_car, filename), image)
+
+    # 전체 결과 저장하기
     filename = os.path.basename(path)
     cv2.imwrite(os.path.join(save_path_result, filename), image)
