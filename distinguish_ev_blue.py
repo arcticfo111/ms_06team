@@ -11,17 +11,17 @@ model = YOLO("/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electron
 data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/ms_team_cardata/final_data_combination1/multi_car/test/images"
 
 # 최종 결과값 저장할 디렉토리
-save_path_result = "./save_path_result"
+save_path_result = "./result"
 if not os.path.exists(save_path_result):
     os.mkdir(save_path_result)
 
 # 번호판은 탐지 안 되고, 차만 탐지 된 경우 결과값 저장할 디렉토리
-save_path_detection_error = "./save_path_detection_error"
+save_path_detection_error = "./detection_error"
 if not os.path.exists(save_path_detection_error):
     os.mkdir(save_path_detection_error)
 
 # 파랑 번호판이 아닌 이미지를 저장할 디렉토리
-save_path_non_color = "./non_blue_detected"
+save_path_non_color = "./non_color"
 if not os.path.exists(save_path_non_color):
     os.mkdir(save_path_non_color)
 
@@ -30,6 +30,10 @@ save_path_blue = "./blue_detected"
 if not os.path.exists(save_path_blue):
     os.mkdir(save_path_blue)
 
+# 두줄 번호판이미지를 저장할 디렉토리
+save_path_twoline = "./twoline_detected"
+if not os.path.exists(save_path_twoline):
+    os.mkdir(save_path_twoline)
 
 # 테스트 이미지가 있는 폴더에서 모든 이미지 파일의 경로를 찾아서 리스트에 저장하기
 data_path_list = glob.glob(os.path.join(data_path, "*.png")) 
@@ -94,12 +98,37 @@ for path in data_path_list :
             # 파란색 비율 계산
             blue_ratio = np.sum(mask) / (mask.shape[0] * mask.shape[1] * 255)
             
+            # 노란색 범위 정의
+            lower_yellow = np.array([20, 50, 50])
+            upper_yellow = np.array([40, 255, 255])
+
+            mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
+            yellow_ratio = np.sum(mask_yellow) / (mask_yellow.shape[0] * mask_yellow.shape[1] * 255)
+
             # 번호판 색 여부에 따라 이미지 속 번호판 색을 저장하는 리스트에 요소 추가
             if blue_ratio >= 0.5:                
                 plate_color.append('blue')  
                 filename = os.path.basename(path)
                 cv2.imwrite(os.path.join(save_path_blue, filename), plate)              
+            elif yellow_ratio >= 0.5:  # 노란색이 이미지의 50% 이상일 경우
+                plate_color.append('yellow')
+                filename = os.path.basename(path)
+                cv2.imwrite(os.path.join(save_path_twoline, filename), plate)
             else:
+                print(class_name)
+                # 텍스트의 크기 계산
+                font = cv2.FONT_HERSHEY_SIMPLEX 
+                scale = 0.2
+                color = (0, 0, 0)
+                thickness = 1
+                (text_width, text_height), _ = cv2.getTextSize(class_name, font, scale, thickness)
+    
+                # 이미지의 중앙 위치 계산
+                center_x = (image.shape[1] - text_width) // 2
+                center_y = (image.shape[0] + text_height) // 2
+
+                # 이미지 중앙에 클래스 이름 표시하기
+                cv2.putText(image, class_name, (center_x, center_y), font, scale, color, thickness, lineType=cv2.LINE_AA)
                 plate_color.append('white')
                 filename = os.path.basename(path)
                 cv2.imwrite(os.path.join(save_path_non_color, filename), plate)
