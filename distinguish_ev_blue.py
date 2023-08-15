@@ -7,8 +7,9 @@ import numpy as np
 # 훈련된 yolo 모델의 가중치를 로드해서 객체 탐지 모델 인스턴스 생성
 model = YOLO("/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/car_plate_detection_yolov8/runs/detect/label_class4_multi_car_all/best.pt")
 
-# 테스트 이미지가 있는 폴더 경로 찾기
-data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/ms_team_cardata/final_data_combination1/multi_car/test/images"
+# 테스트 데이터가 있는 폴더 경로 찾기
+# data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/ms_team_cardata/final_data_combination1/multi_car/test/images"
+data_path = "/Users/dobby/Library/Mobile Documents/com~apple~CloudDocs/electronicsandcode/code/arcticfo111/ms_06team/ms_team_cardata/test_real_car/IMG_7699.MOV"
 
 # 최종 결과값 저장할 디렉토리
 save_path_result = "./result"
@@ -34,6 +35,43 @@ if not os.path.exists(save_path_blue):
 save_path_twoline = "./twoline_detected"
 if not os.path.exists(save_path_twoline):
     os.mkdir(save_path_twoline)
+
+
+# 파일의 확장자 가져오기
+file_extension = os.path.splitext(data_path)[1]
+
+# 일반적인 비디오 파일 형식 리스트업
+video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".MOV"]
+
+# 제공한 파일이 비디오 형식이라면
+if file_extension in video_extensions:
+    # 비디오 프레임 저장할 경로
+    save_dir = './video_frames'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    
+    # 비디오 캡쳐 객체 생성
+    cap = cv2.VideoCapture(data_path)
+    
+    # 비디오의 FPS frames per second 값 가져오기
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    frame_count = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+        # 1초마다 프레임 저장
+        if frame_count % fps == 0:
+            save_path = os.path.join(save_dir, f'frame_{frame_count}.png')
+            cv2.imwrite(save_path, frame)
+            print(f"Saved: frame_{frame_count}.png")
+
+        frame_count += 1
+
+    cap.release()
+    
+    data_path = save_dir
+
 
 # 테스트 이미지가 있는 폴더에서 모든 이미지 파일의 경로를 찾아서 리스트에 저장하기
 data_path_list = glob.glob(os.path.join(data_path, "*.png")) 
@@ -95,7 +133,7 @@ for path in data_path_list :
             upper_blue = np.array([140, 255, 255])
             mask = cv2.inRange(hsv, lower_blue, upper_blue)
             
-            # 파란색 비율 계산
+            # 파란색 픽셀 비율 계산
             blue_ratio = np.sum(mask) / (mask.shape[0] * mask.shape[1] * 255)
             
             # 노란색 범위 정의
@@ -115,7 +153,6 @@ for path in data_path_list :
                 filename = os.path.basename(path)
                 cv2.imwrite(os.path.join(save_path_twoline, filename), plate)
             else:
-                print(class_name)
                 # 텍스트의 크기 계산
                 font = cv2.FONT_HERSHEY_SIMPLEX 
                 scale = 0.2
